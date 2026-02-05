@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, ScrollView, Switch, SafeAreaView, Platform, StatusBar } from 'react-native';
-import { decimalToBinary, getComponents } from './ieeeLogic';
+import { StyleSheet, Text, View, TextInput, ScrollView, Switch, TouchableOpacity, SafeAreaView, Platform } from 'react-native';
+import { decimalToBinary, getComponents, simulateAddition } from './ieeeLogic';
 
 const COLORS = {
   sign: '#3B82F6',    
@@ -16,6 +16,9 @@ export default function App() {
   const [decimalInput, setDecimalInput] = useState('0');
   const [binaryStr, setBinaryStr] = useState('');
   const [components, setComponents] = useState({ sign: '0', exponent: '', mantissa: '', bias: 127 });
+  const [simA, setSimA] = useState('12.5');
+  const [simB, setSimB] = useState('2.5');
+  const [simSteps, setSimSteps] = useState([]);
   const handleDecimalChange = (text) => {
     setDecimalInput(text);
     const val = parseFloat(text);
@@ -30,7 +33,6 @@ export default function App() {
     handleDecimalChange(decimalInput);
   }, [isDouble]);
 
-  //แยกชิ้นส่วน Sign/Exp/Mantissa
   useEffect(() => {
     const comps = getComponents(binaryStr, isDouble);
     setComponents(comps);
@@ -38,6 +40,14 @@ export default function App() {
 
   const rawExponent = parseInt(components.exponent, 2);
   const realExponent = isNaN(rawExponent) ? 0 : rawExponent - components.bias;
+  const handleSimulate = () => {
+    const valA = parseFloat(simA);
+    const valB = parseFloat(simB);
+    if (!isNaN(valA) && !isNaN(valB)) {
+      const { steps } = simulateAddition(valA, valB);
+      setSimSteps(steps);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -59,7 +69,7 @@ export default function App() {
         {/* Input Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Converter</Text>
-          <Text style={styles.label}>Decimal Value:</Text>
+          <Text style={styles.label}>Decimal Value:</Text> 
           <TextInput
             style={styles.input}
             keyboardType="numeric"
@@ -79,7 +89,6 @@ export default function App() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Structure Visualizer</Text>
           
-          {/* แถบสีแสดงบิต */}
           <View style={styles.bitContainer}>
             <View style={[styles.bitBox, { backgroundColor: COLORS.sign, flex: 1 }]}>
               <Text style={styles.bitText}>{components.sign}</Text>
@@ -92,11 +101,47 @@ export default function App() {
             </View>
           </View>
 
-          {/* คำอธิบาย */}
           <View style={styles.legendContainer}>
             <DetailRow color={COLORS.sign} label="Sign" value={components.sign === '0' ? '+ (Positive)' : '- (Negative)'} />
             <DetailRow color={COLORS.exp} label={`Exponent (${components.exponent.length} bits)`} value={`Raw: ${rawExponent} | Actual: ${realExponent}`} />
             <DetailRow color={COLORS.mantissa} label={`Mantissa (${components.mantissa.length} bits)`} value={`1.${components.mantissa.substring(0, 5)}...`} />
+          </View>
+        </View>
+
+        {/* --- Card 3: Arithmetic Simulator (NEW!) --- */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Arithmetic Simulator (Add)</Text>
+          <Text style={{marginBottom:10, color:'#666', fontSize:12}}>
+            จำลองการบวกเลขแบบ IEEE 754 (Single Precision)
+          </Text>
+          
+          <View style={styles.rowInput}>
+             <View style={{flex: 1, marginRight: 8}}>
+                <Text style={styles.label}>Number A</Text>
+                <TextInput style={styles.input} value={simA} onChangeText={setSimA} keyboardType="numeric"/>
+             </View>
+             <View style={{justifyContent:'center', paddingTop: 10}}>
+                <Text style={{fontSize: 20, fontWeight:'bold', color: COLORS.text}}>+</Text>
+             </View>
+             <View style={{flex: 1, marginLeft: 8}}>
+                <Text style={styles.label}>Number B</Text>
+                <TextInput style={styles.input} value={simB} onChangeText={setSimB} keyboardType="numeric"/>
+             </View>
+          </View>
+
+          <TouchableOpacity style={styles.button} onPress={handleSimulate}>
+            <Text style={styles.buttonText}>Simulate Steps</Text>
+          </TouchableOpacity>
+
+          {/* แสดงขั้นตอน (Steps List) */}
+          <View style={{marginTop: 16}}>
+            {simSteps.length > 0 && <Text style={{fontWeight:'bold', marginBottom:8, color: COLORS.text}}>Simulation Process:</Text>}
+            {simSteps.map((step, index) => (
+              <View key={index} style={styles.stepItem}>
+                <Text style={styles.stepTitle}>{step.title}</Text>
+                <Text style={styles.stepDesc}>{step.desc}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -125,7 +170,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: COLORS.card, borderRadius: 12, padding: 16, marginBottom: 16, elevation: 3 },
   cardTitle: { fontSize: 18, fontWeight: '600', marginBottom: 12, color: COLORS.text },
   label: { fontSize: 14, color: '#6B7280', marginBottom: 4 },
-  input: { borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, padding: 12, fontSize: 16, marginBottom: 12 },
+  input: { borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, padding: 12, fontSize: 16, marginBottom: 12, color: COLORS.text },
   hexBox: { backgroundColor: '#374151', padding: 12, borderRadius: 8, alignItems: 'center' },
   hexText: { color: '#ffffff', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', fontSize: 16, fontWeight: 'bold' },
   bitContainer: { flexDirection: 'row', height: 50, borderRadius: 8, overflow: 'hidden', marginBottom: 16 },
@@ -136,4 +181,12 @@ const styles = StyleSheet.create({
   colorDot: { width: 12, height: 12, borderRadius: 6, marginTop: 4, marginRight: 8 },
   detailLabel: { fontSize: 14, fontWeight: '600', color: COLORS.text },
   detailValue: { fontSize: 13, color: '#4B5563' },
+  
+  // Styles Simulator
+  rowInput: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  button: { backgroundColor: COLORS.sign, padding: 12, borderRadius: 8, alignItems: 'center', marginTop: 4 },
+  buttonText: { color: 'white', fontWeight: '600', fontSize: 16 },
+  stepItem: { marginBottom: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#EEE' },
+  stepTitle: { fontWeight: 'bold', color: '#3B82F6', fontSize: 14, marginBottom: 2 },
+  stepDesc: { color: '#374151', fontSize: 13, lineHeight: 18 }
 });
