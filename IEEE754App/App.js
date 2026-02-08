@@ -21,8 +21,12 @@ export default function App() {
   const [simSteps, setSimSteps] = useState([]);
   const handleDecimalChange = (text) => {
     setDecimalInput(text);
+    if (text === '' || text === '-' || text === '.'){
+      setBinaryStr('');
+      return;
+    }
     const val = parseFloat(text);
-    if (!isNaN(val) || text === '') {
+    if (!isNaN(val)){
       const bin = decimalToBinary(val, isDouble);
       setBinaryStr(bin);
     }
@@ -43,7 +47,7 @@ export default function App() {
   const handleSimulate = () => {
     const valA = parseFloat(simA);
     const valB = parseFloat(simB);
-    if (!isNaN(valA) && !isNaN(valB)) {
+    if (!isNaN(valA) && !isNaN(valB)){
       const { steps } = simulateAddition(valA, valB);
       setSimSteps(steps);
     }
@@ -80,7 +84,7 @@ export default function App() {
           <Text style={styles.label}>Hex Representation:</Text>
           <View style={styles.hexBox}>
             <Text style={styles.hexText}>
-              0x{binaryStr ? BigInt('0b' + binaryStr).toString(16).toUpperCase() : '0'}
+              {binaryStr && /^[01]+$/.test(binaryStr)? '0x' + BigInt('0b' + binaryStr).toString(16).toUpperCase() : '-'}
             </Text>
           </View>
         </View>
