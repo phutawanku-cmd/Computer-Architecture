@@ -56,75 +56,147 @@ export const simulateAddition = (valA, valB) => {
   let manA = 1 + parseInt(compA.mantissa, 2) / Math.pow(2, 23);
   let manB = 1 + parseInt(compB.mantissa, 2) / Math.pow(2, 23);
 
+  //Handle Zero Case
   if (valA === 0) manA = 0;
   if (valB === 0) manB = 0;
   
+  //1:Extract
   steps.push({ 
-    title: "1.ยกองค์ประกอบ(Extract)", 
-    desc: `A: 1.${compA.mantissa.substring(0,5)}... x 2^${expA}\nB: 1.${compB.mantissa.substring(0,5)}... x 2^${expB}` 
+    type: 'EXTRACT',
+    title: "1. แยกองค์ประกอบ (Extract)",
+    data: { 
+      valA, valB,
+      expA, expB,
+      manAStr: `1.${compA.mantissa.substring(0, 6)}...`,
+      manBStr: `1.${compB.mantissa.substring(0, 6)}...`
+    }
   });
 
+  //2:Align
   if (expA > expB) {
     const shift = expA - expB;
+    const oldManB = manB;
     manB = manB / Math.pow(2, shift);
     steps.push({ 
-      title: "2.ปรับเลขยกกำลัง(Align)", 
-      desc: `Exp \nB (${expB}) น้อยกว่า A (${expA})\nเลื่อนจุดทศนิยม B ไปทางซ้าย (Shift Right) ${shift} บิต\nMantissa B ใหม่: ${manB.toFixed(6)}...`
+      type: 'ALIGN',
+      title: "2. ปรับเลขชี้กำลัง (Align)",
+      data: {
+        diff: shift,
+        target: 'B',
+        valBefore: oldManB.toFixed(6),
+        valAfter: manB.toFixed(6),
+        exp: expA
+      }
     });
     expB = expA;
   } else if (expB > expA) {
     const shift = expB - expA;
+    const oldManA = manA;
     manA = manA / Math.pow(2, shift);
     steps.push({ 
-      title: "2.ปรับเลขยกกำลัง(Align)", 
-      desc: `เลขชี้กำลัง A (${expA}) น้อยกว่า B (${expB})\nเลื่อน Mantissa A ไปทางขวา ${shift} บิต\nMantissa A ใหม่: ${manA.toFixed(6)}...`
+      type: 'ALIGN',
+      title: "2. ปรับเลขชี้กำลัง (Align)",
+      data: {
+        diff: shift,
+        target: 'A',
+        valBefore: oldManA.toFixed(6),
+        valAfter: manA.toFixed(6),
+        exp: expB
+      }
     });
     expA = expB;
   } else {
-    steps.push({ title: "2.ปรับเลขยกกำลัง(Align)", desc: "เลขชี้กำลังเท่ากันแล้วไม่ต้องเลื่อนบิต" });
+    steps.push({ 
+      type: 'ALIGN_NONE',
+      title: "2. ปรับเลขชี้กำลัง (Align)",
+      data: { exp: expA }
+    });
   }
 
+  //3:Add
   const signValA = compA.sign === '1' ? -1 : 1;
   const signValB = compB.sign === '1' ? -1 : 1;
-  
   let resultMan = (manA * signValA) + (manB * signValB);
+  
   steps.push({ 
-    title: "3.บวกส่วน Mantissa(Add)", 
-    desc: `(${signValA === 1 ? '+' : '-'} ${manA.toFixed(4)}) + (${signValB === 1 ? '+' : '-'} ${manB.toFixed(4)}) \n= ${resultMan.toFixed(6)}...` 
+    type: 'ADD',
+    title: "3. บวกส่วน Mantissa (Add)",
+    data: {
+      opA: (manA * signValA).toFixed(4),
+      opB: (manB * signValB).toFixed(4),
+      result: resultMan.toFixed(6)
+    }
   });
 
+  //4:Normalize
   let resultExp = expA;
   
   if (resultMan === 0) {
-    steps.push({ title: "4.จัดรูปมาตรฐาน(Normalize)", desc: "ผลลัพธ์เป็นศูนย์(Zero)" });
+    steps.push({ type: 'FINISH_ZERO', title: "4. ผลลัพธ์เป็นศูนย์", data: { result: 0 } });
     return { result: 0, steps };
   }
 
   const resultSign = resultMan < 0 ? '1' : '0';
   resultMan = Math.abs(resultMan);
+
+  //เช็ค Overflow
   if (resultMan >= 2.0) {
+    let shiftCount = 0;
+    const oldMan = resultMan;
     while (resultMan >= 2.0) {
       resultMan /= 2;
       resultExp++;
-      steps.push({ title: "4.จัดรูปมาตรฐาน(Overflow)", desc: `Mantissa >= 2.0 เลื่อนบิตขวา (>>> 1)\nเพิ่มเลขชี้กำลังเป็น ${resultExp}` });
+      shiftCount++;
     }
+    steps.push({ 
+      type: 'NORMALIZE',
+      title: "4. จัดรูปมาตรฐาน (Overflow)", 
+      data: {
+        mode: 'Overflow',
+        shift: shiftCount,
+        before: oldMan.toFixed(4),
+        after: resultMan.toFixed(4),
+        newExp: resultExp
+      }
+    });
   } 
+  //เช็ค Underflow
   else if (resultMan < 1.0) {
-    let loopCount = 0; 
-    while (resultMan < 1.0 && resultExp > -126 && loopCount < 30) {
+    let shiftCount = 0;
+    const oldMan = resultMan;
+    while (resultMan < 1.0 && resultExp > -126 && shiftCount < 30) {
       resultMan *= 2;
       resultExp--;
-      loopCount++;
+      shiftCount++;
     }
-    steps.push({ title: "4. จัดรูปมาตรฐาน(Underflow)", desc: `Mantissa < 1.0 เลื่อนบิตซ้าย (<<) จนได้ 1.xxx\nลดเลขชี้กำลังเป็น ${resultExp}` });
+    steps.push({ 
+      type: 'NORMALIZE',
+      title: "4. จัดรูปมาตรฐาน (Underflow)", 
+      data: {
+        mode: 'Underflow',
+        shift: shiftCount,
+        before: oldMan.toFixed(4),
+        after: resultMan.toFixed(4),
+        newExp: resultExp
+      }
+    });
   } else {
-    steps.push({ title: "4. จัดรูปมาตรฐาน(Normalize)", desc: "Mantissa อยู่ในรูปมาตรฐานแล้ว (1.0 <= M < 2.0)" });
+    steps.push({ 
+      type: 'NORMALIZE_NONE',
+      title: "4. จัดรูปมาตรฐาน",
+      data: { val: resultMan.toFixed(4) }
+    });
   }
 
+  //5:สรุป
   const finalVal = valA + valB;
   steps.push({ 
-    title: "5.ผลลัพธ์(Final Result)", 
-    desc: `ผลลัพธ์: ${finalVal}\n(รูปแบบฐานสอง: Sign=${resultSign}, Exp=${resultExp + 127}, Mantissa=~${(resultMan-1).toFixed(6)})`
+    type: 'FINAL',
+    title: "5. ผลลัพธ์สุดท้าย", 
+    data: {
+      finalVal,
+      binary: `Sign=${resultSign}, Exp=${resultExp + 127}, Mantissa=~${(resultMan-1).toFixed(6)}`
+    }
   });
 
   return { result: finalVal, steps };
