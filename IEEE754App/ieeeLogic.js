@@ -44,7 +44,7 @@ export const getComponents = (binaryStr, isDouble) => {
   }
 };
 
-export const simulateAddition = (valA, valB) => {
+export const simulateArithmetic = (valA, valB, operation = 'ADD') => {
   const steps = [];
   const binA = decimalToBinary(valA, false); 
   const binB = decimalToBinary(valB, false);
@@ -56,9 +56,14 @@ export const simulateAddition = (valA, valB) => {
   let manA = 1 + parseInt(compA.mantissa, 2) / Math.pow(2, 23);
   let manB = 1 + parseInt(compB.mantissa, 2) / Math.pow(2, 23);
 
-  //Handle Zero Case
   if (valA === 0) manA = 0;
   if (valB === 0) manB = 0;
+  let signValA = compA.sign === '1' ? -1 : 1;
+  let signValB = compB.sign === '1' ? -1 : 1;
+  
+  if (operation === 'SUB') {
+    signValB = signValB * -1;
+  }
   
   //1:Extract
   steps.push({ 
@@ -80,13 +85,7 @@ export const simulateAddition = (valA, valB) => {
     steps.push({ 
       type: 'ALIGN',
       title: "2. ปรับเลขชี้กำลัง (Align)",
-      data: {
-        diff: shift,
-        target: 'B',
-        valBefore: oldManB.toFixed(6),
-        valAfter: manB.toFixed(6),
-        exp: expA
-      }
+      data: { diff: shift, target: 'B', valBefore: oldManB.toFixed(6), valAfter: manB.toFixed(6), exp: expA }
     });
     expB = expA;
   } else if (expB > expA) {
@@ -96,13 +95,7 @@ export const simulateAddition = (valA, valB) => {
     steps.push({ 
       type: 'ALIGN',
       title: "2. ปรับเลขชี้กำลัง (Align)",
-      data: {
-        diff: shift,
-        target: 'A',
-        valBefore: oldManA.toFixed(6),
-        valAfter: manA.toFixed(6),
-        exp: expB
-      }
+      data: { diff: shift, target: 'A', valBefore: oldManA.toFixed(6), valAfter: manA.toFixed(6), exp: expB }
     });
     expA = expB;
   } else {
@@ -114,13 +107,11 @@ export const simulateAddition = (valA, valB) => {
   }
 
   //3:Add
-  const signValA = compA.sign === '1' ? -1 : 1;
-  const signValB = compB.sign === '1' ? -1 : 1;
   let resultMan = (manA * signValA) + (manB * signValB);
   
   steps.push({ 
     type: 'ADD',
-    title: "3. บวกส่วน Mantissa (Add)",
+    title: operation === 'ADD' ? "3. บวกส่วน Mantissa" : "3. ลบส่วน Mantissa",
     data: {
       opA: (manA * signValA).toFixed(4),
       opB: (manB * signValB).toFixed(4),
@@ -189,7 +180,8 @@ export const simulateAddition = (valA, valB) => {
   }
 
   //5:สรุป
-  const finalVal = valA + valB;
+  const finalVal = operation === 'ADD' ? valA + valB : valA - valB;
+  
   steps.push({ 
     type: 'FINAL',
     title: "5. ผลลัพธ์สุดท้าย", 
