@@ -80,7 +80,7 @@ export default function App() {
                  <Text style={styles.paramDetail}>Exp: {d.expA}</Text>
                  <Text style={styles.paramDetail}>Man: {d.manAStr.substring(0,6)}..</Text>
               </View>
-              <Text style={{fontSize: 24, fontWeight: 'bold', color: COLORS.subText}}>+</Text>
+              <Text style={{fontSize: 24, fontWeight: 'bold', color: COLORS.subText}}>{d.opSymbol}</Text>
               <View style={styles.paramBox}>
                  <Text style={styles.paramTitle}>Operand B</Text>
                  <Text style={styles.paramBigVal}>{d.valB}</Text>

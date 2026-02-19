@@ -66,14 +66,27 @@ export const simulateArithmetic = (valA, valB, operation = 'ADD') => {
   }
   
   //1:Extract
+  let displayValB = valB;
+  let opSymbol = '+';
+
+  if (operation === 'SUB') {
+    displayValB = -valB;
+    opSymbol = '+';
+  } else if (operation === 'MUL') {
+    opSymbol = '×';
+  } else if (operation === 'DIV') {
+    opSymbol = '÷';
+  }
   steps.push({ 
     type: 'EXTRACT',
     title: "1. แยกองค์ประกอบ (Extract)",
     data: { 
-      valA, valB,
-      expA, expB,
-      manAStr: `1.${compA.mantissa.substring(0, 6)}...`,
-      manBStr: `1.${compB.mantissa.substring(0, 6)}...`
+      valA: valA, 
+      valB: displayValB,
+      opSymbol: opSymbol,
+      expA, expB, 
+      manAStr: `1.${compA.mantissa.substring(0,6)}...`, 
+      manBStr: `1.${compB.mantissa.substring(0,6)}...` 
     }
   });
 
