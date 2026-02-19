@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, ScrollView, Switch, TouchableOpacity, SafeAreaView, Platform, Dimensions, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; 
-import { decimalToBinary, getComponents, simulateAddition } from './ieeeLogic'; 
+import { decimalToBinary, getComponents, simulateArithmetic } from './ieeeLogic';
 
 const { width } = Dimensions.get('window');
 const COLORS = {
@@ -55,7 +55,7 @@ export default function App() {
     const valB = parseFloat(simB);
     
     if (isNaN(valA) || isNaN(valB)) return;
-    let result = simulateAddition(valA, valB);     
+    let result = simulateArithmetic(valA, valB, operation);    
     setSimSteps(result.steps);
     setCurrentStep(0);
     setIsSimulating(true);
@@ -126,7 +126,7 @@ export default function App() {
          return (
             <View style={styles.stepContentBox}>
                <View style={[styles.statusBadge, {backgroundColor: d.mode==='Overflow' ? '#FEF3C7' : '#DBEAFE'}]}>
-                  <Text style={{color: d.mode==='Overflow' ? '#D97706' : '#2563EB', fontWeight:'bold'}}>⚠️ {d.mode} Detected</Text>
+                  <Text style={{color: d.mode==='Overflow' ? '#D97706' : '#2563EB', fontWeight:'bold'}}>{d.mode} Detected</Text>
                </View>
                <View style={styles.visualShiftContainer}>
                   <Text style={styles.shiftValue}>{d.before}</Text>
@@ -144,8 +144,7 @@ export default function App() {
                   Perfect!
                </Text>
                <Text style={{textAlign: 'center', color: COLORS.subText, marginBottom: 15}}>
-                  Mantissa อยู่ในเกณฑ์มาตรฐานแล้ว (1.0 ≤ M {"<"} 2.0){"\n"}
-                  ไม่ต้องขยับจุดทศนิยม
+                  Mantissa อยู่ในเกณฑ์มาตรฐานแล้วไม่ต้องขยับจุดทศนิยม
                </Text>
                <View style={styles.terminalBox}>
                   <Text style={[styles.terminalText, {fontSize: 20}]}>
