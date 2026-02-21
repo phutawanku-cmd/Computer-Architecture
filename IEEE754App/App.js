@@ -109,13 +109,27 @@ export default function App() {
              </View>
           </View>
         );
-      case 'ADD':
+case 'EXP_CALC':
+        return (
+          <View style={styles.stepContentBox}>
+             <Text style={styles.instructionText}>คำนวณ Exponent ใหม่</Text>
+             <View style={styles.mathOperation}>
+                <Text style={styles.mathText}>{d.expA}</Text>
+                <View style={{flexDirection:'row', alignItems:'center', width:'100%'}}>
+                   <Text style={{fontSize:24, marginRight: 10}}>{d.op}</Text>
+                   <Text style={[styles.mathText, {borderBottomWidth: 2, borderColor: COLORS.text, flex:1}]}>{d.expB}</Text>
+                </View>
+                <Text style={[styles.mathText, {color: COLORS.exp, fontSize: 32, marginTop: 10}]}>{d.result}</Text>
+             </View>
+          </View>
+        );
+      case 'COMPUTE':
         return (
           <View style={styles.stepContentBox}>
              <View style={styles.mathOperation}>
                 <Text style={styles.mathText}>{d.opA}</Text>
                 <View style={{flexDirection:'row', alignItems:'center', width:'100%'}}>
-                   <Text style={{fontSize:24, marginRight: 10}}>+</Text>
+                   <Text style={{fontSize:24, marginRight: 10}}>{d.sign}</Text>
                    <Text style={[styles.mathText, {borderBottomWidth: 2, borderColor: COLORS.text, flex:1}]}>{d.opB}</Text>
                 </View>
                 <Text style={[styles.mathText, {color: COLORS.primary, fontSize: 32, marginTop: 10}]}>{d.result}</Text>
@@ -283,7 +297,9 @@ export default function App() {
                  <View style={styles.startScreen}>
                     <View style={styles.inputRow}>
                        <TextInput style={styles.simInput} value={simA} onChangeText={setSimA} keyboardType="numeric" />
-                       <Text style={styles.opSymbol}>+</Text>
+                       <Text style={styles.opSymbol}>
+                           {operation === 'ADD' ? '+' : operation === 'SUB' ? '-' : operation === 'MUL' ? '×' : '÷'}
+                        </Text>
                        <TextInput style={styles.simInput} value={simB} onChangeText={setSimB} keyboardType="numeric" />
                     </View>
                     <TouchableOpacity style={styles.btnPrimary} onPress={handleSimulate}>
