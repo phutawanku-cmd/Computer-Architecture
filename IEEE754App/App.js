@@ -19,6 +19,14 @@ const COLORS = {
   terminalText: '#4ADE80'
 };
 
+// 🛡️ ย้าย Sub-Component ขึ้นมาตรงนี้เพื่อกันระบบ Hot Reload หาไม่เจอ
+const DetailItem = ({ label, value, color }) => (
+   <View style={{flexDirection: 'row', alignItems: 'center', marginRight: 15, marginBottom: 5}}>
+      <View style={{width: 8, height: 8, borderRadius: 4, backgroundColor: color, marginRight: 6}} />
+      <Text style={{fontSize: 12, color: COLORS.subText}}>{label}: <Text style={{fontWeight: 'bold', color: COLORS.text}}>{value}</Text></Text>
+   </View>
+);
+
 export default function App() {
   const [isDouble, setIsDouble] = useState(false);
   const [decimalInput, setDecimalInput] = useState('0');
@@ -78,14 +86,14 @@ export default function App() {
                  <Text style={styles.paramTitle}>Operand A</Text>
                  <Text style={styles.paramBigVal}>{d.valA}</Text>
                  <Text style={styles.paramDetail}>Exp: {d.expA}</Text>
-                 <Text style={styles.paramDetail}>Man: {d.manAStr.substring(0,6)}..</Text>
+                 <Text style={styles.paramDetail}>Man: {d.manAStr}</Text>
               </View>
               <Text style={{fontSize: 24, fontWeight: 'bold', color: COLORS.subText}}>{d.opSymbol}</Text>
               <View style={styles.paramBox}>
                  <Text style={styles.paramTitle}>Operand B</Text>
                  <Text style={styles.paramBigVal}>{d.valB}</Text>
                  <Text style={styles.paramDetail}>Exp: {d.expB}</Text>
-                 <Text style={styles.paramDetail}>Man: {d.manBStr.substring(0,6)}..</Text>
+                 <Text style={styles.paramDetail}>Man: {d.manBStr}</Text>
               </View>
             </View>
           </View>
@@ -109,7 +117,7 @@ export default function App() {
              </View>
           </View>
         );
-case 'EXP_CALC':
+      case 'EXP_CALC':
         return (
           <View style={styles.stepContentBox}>
              <Text style={styles.instructionText}>คำนวณ Exponent ใหม่</Text>
@@ -126,13 +134,16 @@ case 'EXP_CALC':
       case 'COMPUTE':
         return (
           <View style={styles.stepContentBox}>
-             <View style={styles.mathOperation}>
-                <Text style={styles.mathText}>{d.opA}</Text>
-                <View style={{flexDirection:'row', alignItems:'center', width:'100%'}}>
-                   <Text style={{fontSize:24, marginRight: 10}}>{d.sign}</Text>
-                   <Text style={[styles.mathText, {borderBottomWidth: 2, borderColor: COLORS.text, flex:1}]}>{d.opB}</Text>
+             <View style={[styles.mathOperation, { alignItems: 'flex-end', paddingRight: 40 }]}>
+                <Text style={[styles.mathText, { letterSpacing: 2 }]}>{d.opA}</Text>
+                
+                <View style={{flexDirection:'row', alignItems:'center', justifyContent: 'flex-end', width:'100%'}}>
+                   <Text style={{fontSize:24, marginRight: 15}}>{d.sign}</Text>
+                   <Text style={[styles.mathText, { letterSpacing: 2 }]}>{d.opB}</Text>
                 </View>
-                <Text style={[styles.mathText, {color: COLORS.primary, fontSize: 32, marginTop: 10}]}>{d.result}</Text>
+                <View style={{borderBottomWidth: 2, borderColor: COLORS.text, width: '120%', marginBottom: 10}} />
+                
+                <Text style={[styles.mathText, {color: COLORS.primary, fontSize: 28, letterSpacing: 2 }]}>{d.result}</Text>
              </View>
           </View>
         );
@@ -193,12 +204,7 @@ case 'EXP_CALC':
             <Text style={styles.appSubtitle}>Visualizer & Simulator</Text>
           </View>
           
-          {/* Toggle Switch (Pill Style) */}
-          <TouchableOpacity 
-            style={styles.togglePill} 
-            activeOpacity={0.8}
-            onPress={() => setIsDouble(!isDouble)}
-          >
+          <TouchableOpacity style={styles.togglePill} activeOpacity={0.8} onPress={() => setIsDouble(!isDouble)}>
              <View style={[styles.pillSegment, !isDouble && styles.pillActive]}>
                 <Text style={[styles.pillText, !isDouble && styles.pillTextActive]}>32</Text>
              </View>
@@ -214,22 +220,11 @@ case 'EXP_CALC':
             <Ionicons name="swap-vertical" size={22} color={COLORS.primary} />
             <Text style={styles.cardTitle}>Converter</Text>
           </View>
-          
-          <TextInput
-            style={styles.mainInput}
-            keyboardType="numeric"
-            value={decimalInput}
-            onChangeText={handleDecimalChange}
-            placeholder="Type a number..."
-            placeholderTextColor="#94A3B8"
-          />
-
+          <TextInput style={styles.mainInput} keyboardType="numeric" value={decimalInput} onChangeText={handleDecimalChange} placeholder="Type a number..." placeholderTextColor="#94A3B8" />
           <View style={styles.hexContainer}>
              <Text style={styles.hexLabel}>HEX</Text>
              <Text style={styles.hexValue}>
-                {binaryStr && /^[01]+$/.test(binaryStr) 
-                  ? '0x' + BigInt('0b' + binaryStr).toString(16).toUpperCase() 
-                  : '-'}
+                {binaryStr && /^[01]+$/.test(binaryStr) ? '0x' + BigInt('0b' + binaryStr).toString(16).toUpperCase() : '-'}
              </Text>
           </View>
         </View>
@@ -240,33 +235,20 @@ case 'EXP_CALC':
             <Ionicons name="hardware-chip-outline" size={22} color={COLORS.exp} />
             <Text style={styles.cardTitle}>Bit Structure</Text>
           </View>
-
-          {/* Visualization Bars */}
           <View style={styles.bitVisContainer}>
-             {/* Sign */}
              <View style={{flex: 1, marginRight: 4}}>
                 <Text style={[styles.bitLabel, {color: COLORS.sign}]}>S</Text>
-                <View style={[styles.bitBar, {backgroundColor: COLORS.sign}]}>
-                   <Text style={styles.bitBarText}>{components.sign}</Text>
-                </View>
+                <View style={[styles.bitBar, {backgroundColor: COLORS.sign}]}><Text style={styles.bitBarText}>{components.sign}</Text></View>
              </View>
-             {/* Exponent */}
              <View style={{flex: isDouble?3:2.5, marginRight: 4}}>
                 <Text style={[styles.bitLabel, {color: COLORS.exp}]}>Exponent</Text>
-                <View style={[styles.bitBar, {backgroundColor: COLORS.exp}]}>
-                   <Text style={styles.bitBarText} numberOfLines={1}>{components.exponent}</Text>
-                </View>
+                <View style={[styles.bitBar, {backgroundColor: COLORS.exp}]}><Text style={styles.bitBarText}>{components.exponent}</Text></View>
              </View>
-             {/* Mantissa */}
              <View style={{flex: isDouble?6:5}}>
                 <Text style={[styles.bitLabel, {color: COLORS.man}]}>Mantissa</Text>
-                <View style={[styles.bitBar, {backgroundColor: COLORS.man}]}>
-                   <Text style={styles.bitBarText} numberOfLines={1} ellipsizeMode="tail">{components.mantissa}</Text>
-                </View>
+                <View style={[styles.bitBar, {backgroundColor: COLORS.man}]}><Text style={styles.bitBarText}>{components.mantissa}</Text></View>
              </View>
           </View>
-
-          {/* Details */}
           <View style={styles.detailContainer}>
              <DetailItem label="Sign" value={components.sign === '0' ? '+' : '-'} color={COLORS.sign} />
              <DetailItem label="Raw Exp" value={rawExponent} color={COLORS.exp} />
@@ -274,14 +256,13 @@ case 'EXP_CALC':
           </View>
         </View>
 
-        {/* --- Card 3: Simulator (The "Interactive Stepper") --- */}
+        {/* --- Card 3: Simulator --- */}
         <View style={[styles.card, {padding: 0, overflow: 'hidden'}]}>
            <View style={[styles.cardTitleRow, {padding: 20, paddingBottom: 10}]}>
               <Ionicons name="calculator-outline" size={22} color={COLORS.man} />
               <Text style={styles.cardTitle}>Arithmetic Simulator</Text>
            </View>
            
-           {/* Operation Tabs */}
            <View style={styles.tabContainer}>
               {['ADD', 'SUB', 'MUL', 'DIV'].map(op => (
                  <TouchableOpacity key={op} style={[styles.tabItem, operation === op && styles.tabItemActive]} onPress={() => setOperation(op)}>
@@ -290,10 +271,8 @@ case 'EXP_CALC':
               ))}
            </View>
 
-           {/* Content Area */}
            <View style={{padding: 20}}>
               {!isSimulating ? (
-                 /* Start Screen */
                  <View style={styles.startScreen}>
                     <View style={styles.inputRow}>
                        <TextInput style={styles.simInput} value={simA} onChangeText={setSimA} keyboardType="numeric" />
@@ -308,36 +287,26 @@ case 'EXP_CALC':
                     </TouchableOpacity>
                  </View>
               ) : (
-                 /* Stepper Screen */
                  <View style={styles.stepperScreen}>
-                    {/* Progress Bar */}
                     <View style={styles.progressBarRow}>
                        {simSteps.map((_, i) => (
                           <View key={i} style={[styles.progressSegment, i <= currentStep ? {backgroundColor: COLORS.primary} : {backgroundColor: COLORS.border}]} />
                        ))}
                     </View>
-
-                    {/* Step Header */}
                     <View style={styles.stepHeader}>
                        <Text style={styles.stepTitle}>{simSteps[currentStep].title}</Text>
                        <Text style={styles.stepCounter}>{currentStep + 1}/{simSteps.length}</Text>
                     </View>
-
-                    {/* Step Content Visual */}
                     <View style={styles.stepVisualBox}>
                        <ScrollView nestedScrollEnabled>{renderStepContent(simSteps[currentStep])}</ScrollView>
                     </View>
-
-                    {/* Controls */}
                     <View style={styles.controlsRow}>
                        <TouchableOpacity onPress={prevStep} disabled={currentStep===0} style={[styles.navBtn, currentStep===0 && styles.navBtnDisabled]}>
                           <Ionicons name="chevron-back" size={24} color={COLORS.text} />
                        </TouchableOpacity>
-                       
                        <TouchableOpacity onPress={resetSim} style={styles.btnSecondary}>
                           <Text style={{color: COLORS.text, fontWeight:'600'}}>Reset</Text>
                        </TouchableOpacity>
-
                        <TouchableOpacity onPress={nextStep} disabled={currentStep===simSteps.length-1} style={[styles.navBtn, styles.navBtnPrimary, currentStep===simSteps.length-1 && styles.navBtnDisabled]}>
                           <Ionicons name="chevron-forward" size={24} color="white" />
                        </TouchableOpacity>
@@ -346,101 +315,69 @@ case 'EXP_CALC':
               )}
            </View>
         </View>
-
         <View style={{height: 40}} />
       </ScrollView>
     </SafeAreaView>
   );
 }
-//SubComponents
-const DetailItem = ({ label, value, color }) => (
-   <View style={{flexDirection: 'row', alignItems: 'center', marginRight: 15, marginBottom: 5}}>
-      <View style={{width: 8, height: 8, borderRadius: 4, backgroundColor: color, marginRight: 6}} />
-      <Text style={{fontSize: 12, color: COLORS.subText}}>{label}: <Text style={{fontWeight: 'bold', color: COLORS.text}}>{value}</Text></Text>
-   </View>
-);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg, paddingTop: Platform.OS === 'android' ? 35 : 0 },
   scrollContainer: { padding: 16 },
-  
-  //Header
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   appTitle: { fontSize: 28, fontWeight: '800', color: COLORS.text, letterSpacing: -0.5 },
   appSubtitle: { fontSize: 14, color: COLORS.subText, fontWeight: '500' },
-  
-  //Toggle Pill
   togglePill: { flexDirection: 'row', backgroundColor: '#E2E8F0', borderRadius: 20, padding: 4 },
   pillSegment: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
   pillActive: { backgroundColor: COLORS.primary, shadowColor: "#000", shadowOffset: {width:0,height:1}, shadowOpacity:0.2, elevation:2 },
   pillText: { fontSize: 12, fontWeight: '700', color: COLORS.subText },
   pillTextActive: { color: 'white' },
-
-  //Cards
   card: { backgroundColor: COLORS.card, borderRadius: 20, padding: 20, marginBottom: 16, shadowColor: "#64748B", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4 },
   cardTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   cardTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text, marginLeft: 8 },
-
-  //Inputs
   mainInput: { fontSize: 32, fontWeight: '700', color: COLORS.text, borderBottomWidth: 2, borderColor: COLORS.border, paddingBottom: 8, marginBottom: 16, textAlign: 'center' },
   hexContainer: { backgroundColor: COLORS.terminal, borderRadius: 12, padding: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   hexLabel: { color: '#64748B', fontSize: 12, fontWeight: '700' },
   hexValue: { color: COLORS.terminalText, fontFamily: Platform.OS==='ios'?'Courier':'monospace', fontSize: 16, fontWeight: 'bold' },
-
-  //BitVisualizer
   bitVisContainer: { flexDirection: 'row', marginBottom: 16 },
   bitLabel: { fontSize: 10, fontWeight: '700', marginBottom: 4, textTransform: 'uppercase' },
-  bitBar: { height: 48, borderRadius: 8, justifyContent: 'center', paddingHorizontal: 8 },
-  bitBarText: { color: 'white', fontWeight: 'bold', fontFamily: Platform.OS==='ios'?'Courier':'monospace' },
+  bitBar: { minHeight: 48, borderRadius: 8, justifyContent: 'center', paddingHorizontal: 4, paddingVertical: 8 },
+  bitBarText: { color: 'white', fontWeight: 'bold', fontFamily: Platform.OS==='ios'?'Courier':'monospace', fontSize: 11, textAlign: 'center' },
   detailContainer: { flexDirection: 'row', flexWrap: 'wrap' },
-
-  //Simulator
   tabContainer: { flexDirection: 'row', borderBottomWidth: 1, borderColor: COLORS.border },
   tabItem: { flex: 1, paddingVertical: 12, alignItems: 'center' },
   tabItemActive: { borderBottomWidth: 3, borderColor: COLORS.primary },
   tabText: { fontWeight: '600', color: COLORS.subText },
   tabTextActive: { color: COLORS.primary, fontWeight: '800' },
-  
-  //StartScreen
   startScreen: { alignItems: 'center', paddingVertical: 10 },
   inputRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, width: '100%' },
   simInput: { flex: 1, backgroundColor: '#F1F5F9', borderRadius: 12, padding: 16, fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: COLORS.text },
   opSymbol: { fontSize: 32, fontWeight: 'bold', color: COLORS.subText, marginHorizontal: 16 },
   btnPrimary: { flexDirection: 'row', backgroundColor: COLORS.primary, paddingVertical: 16, paddingHorizontal: 32, borderRadius: 16, alignItems: 'center', width: '100%', justifyContent: 'center', shadowColor: COLORS.primary, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
   btnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-
-  //StepperUI
   stepperScreen: { },
   progressBarRow: { flexDirection: 'row', marginBottom: 16, height: 4, borderRadius: 2, overflow: 'hidden' },
   progressSegment: { flex: 1, marginRight: 2 },
   stepHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   stepTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text },
   stepCounter: { fontSize: 12, fontWeight: '700', color: COLORS.subText, backgroundColor: '#F1F5F9', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  
   stepVisualBox: { minHeight: 180, backgroundColor: '#F8FAFC', borderRadius: 16, borderWidth: 1, borderColor: COLORS.border, padding: 16, marginBottom: 16, justifyContent: 'center' },
   stepContentBox: { alignItems: 'center', width: '100%' },
-  
-  //ContentStyles
   paramRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', width: '100%' },
   paramBox: { alignItems: 'center', backgroundColor: 'white', padding: 12, borderRadius: 12, shadowColor: '#000', shadowOpacity: 0.05, elevation: 2, width: '40%' },
   paramTitle: { fontSize: 12, color: COLORS.subText, marginBottom: 4 },
   paramBigVal: { fontSize: 20, fontWeight: 'bold', color: COLORS.text, marginBottom: 4 },
   paramDetail: { fontSize: 10, color: COLORS.subText },
-  
   instructionText: { fontSize: 16, textAlign: 'center', color: COLORS.text, marginBottom: 16 },
   visualShiftContainer: { width: '100%', alignItems: 'center' },
   shiftBlock: { width: '100%', backgroundColor: 'white', borderWidth: 2, borderColor: '#E2E8F0', borderRadius: 12, padding: 12, alignItems: 'center' },
   shiftLabel: { fontSize: 10, fontWeight: '700', color: COLORS.subText, textTransform: 'uppercase', marginBottom: 4 },
   shiftValue: { fontSize: 20, fontWeight: 'bold', fontFamily: Platform.OS==='ios'?'Courier':'monospace', color: COLORS.text },
-  
   mathOperation: { alignItems: 'center' },
   mathText: { fontSize: 24, fontWeight: 'bold', fontFamily: Platform.OS==='ios'?'Courier':'monospace', color: COLORS.text },
-  
   statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 16 },
   terminalBox: { backgroundColor: COLORS.terminal, padding: 16, borderRadius: 12, marginTop: 16, width: '100%' },
-  terminalText: { color: COLORS.terminalText, fontFamily: Platform.OS==='ios'?'Courier':'monospace', textAlign: 'center' },
-
-  //Controls
+  terminalText: { color: COLORS.terminalText, fontFamily: Platform.OS==='ios'?'Courier':'monospace', textAlign: 'center', fontSize: 12, letterSpacing: 1.5, flexWrap: 'wrap' },
   controlsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   navBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' },
   navBtnPrimary: { backgroundColor: COLORS.primary },
